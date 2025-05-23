@@ -4,17 +4,15 @@ export default function SignUpPage() {
   async function createUser(formData: FormData) {
     'use server'
     const { clerkClient } = await import('@clerk/nextjs/server')
-
-    const email = String(formData.get('email'))
-    const password = String(formData.get('password'))
-    const role = String(formData.get('role')) as 'accountant' | 'staff'
-
-    await clerkClient.users.createUser({
+    const client = await clerkClient();
+    const email = String(formData.get('email'));
+    const password = String(formData.get('password'));
+    const role = String(formData.get('role')) as 'accountant' | 'staff';
+    await client.users.createUser({
       emailAddress: [email],
       password,
       publicMetadata: { role },
     })
-
     redirect('/app/(auth)/sign-in')
   }
 
