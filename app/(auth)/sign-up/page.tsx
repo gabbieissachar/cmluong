@@ -1,8 +1,10 @@
-import { clerkClient } from '@clerk/nextjs/server'
+import { redirect } from 'next/navigation'
 
 export default function SignUpPage() {
   async function createUser(formData: FormData) {
     'use server'
+    const { clerkClient } = await import('@clerk/nextjs/server')
+
     const email = String(formData.get('email'))
     const password = String(formData.get('password'))
     const role = String(formData.get('role')) as 'accountant' | 'staff'
@@ -12,6 +14,8 @@ export default function SignUpPage() {
       password,
       publicMetadata: { role },
     })
+
+    redirect('/app/(auth)/sign-in')
   }
 
   return (
