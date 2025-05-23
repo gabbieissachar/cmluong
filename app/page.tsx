@@ -9,9 +9,12 @@ export default function Home() {
     <>
       <nav className="w-full flex justify-between items-center p-4 border-b mb-6">
         <div className="text-lg font-bold">CM Salary Tool</div>
-        <div>
+        <div className="flex gap-2">
           <Link href="/sign-up">
             <button className="px-4 py-2 bg-black text-white rounded">Sign Up</button>
+          </Link>
+          <Link href="/accountant/cycle/2024-01">
+            <button className="px-4 py-2 bg-blue-600 text-white rounded">Accountant Cycle</button>
           </Link>
         </div>
       </nav>

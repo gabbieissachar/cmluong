@@ -8,12 +8,22 @@ export default function SignUpPage() {
     const email = String(formData.get('email'));
     const password = String(formData.get('password'));
     const role = String(formData.get('role')) as 'accountant' | 'staff';
-    await client.users.createUser({
-      emailAddress: [email],
-      password,
-      publicMetadata: { role },
-    })
-    redirect('/app/(auth)/sign-in')
+    try {
+      await client.users.createUser({
+        emailAddress: [email], // <-- camelCase
+        password, // Ensure this is at least 8 characters
+        publicMetadata: { role },
+      })
+      redirect('/app/(auth)/sign-in')
+    } catch (error: any) {
+      console.error('Clerk createUser error:', error);
+      if (error && error.errors) {
+        error.errors.forEach((err: any) => {
+          console.error('Clerk error:', err.message, err.longMessage, err.meta);
+        });
+      }
+      throw error;
+    }
   }
 
   return (
