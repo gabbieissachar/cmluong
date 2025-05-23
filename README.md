@@ -63,6 +63,8 @@ Before you begin, ensure you have the following:
 2. Create a new application
 3. Go to API Keys
 4. Copy the `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY`
+5. Create a JWT template in Clerk that exposes `role` from `publicMetadata`
+6. Set `CLERK_JWT_TEMPLATE_NAME` to the name of that template
 
 ### Supabase Setup
 1. Go to [Supabase Dashboard](https://app.supabase.com/)
@@ -79,6 +81,7 @@ Create a `.env` file in the root directory with the following variables:
 # Clerk Authentication
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_publishable_key
 CLERK_SECRET_KEY=your_secret_key
+CLERK_JWT_TEMPLATE_NAME=payroll
 
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
