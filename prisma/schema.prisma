@@ -1,0 +1,58 @@
+// Prisma schema for Supabase
+// Data source using PostgreSQL
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Enums
+enum Role {
+  LEADER
+  ACCOUNTANT
+  STAFF
+}
+
+enum CycleStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  PAID
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  role        Role
+  fullName    String
+  bankAccount String?
+  payslips    Payslip[]
+}
+
+model PayrollCycle {
+  id        String      @id @default(cuid())
+  month     DateTime
+  status    CycleStatus
+  payslips  Payslip[]
+  advanceAt DateTime?
+}
+
+model Payslip {
+  id              String   @id @default(cuid())
+  userId          String
+  cycleId         String
+  baseSalary      Int
+  allowance       Int
+  deductions      Int
+  employeeSI      Int
+  employerSI      Int
+  netSalary       Int
+  pdfPath         String?
+  confirmedByUser Boolean  @default(false)
+  User            User      @relation(fields: [userId], references: [id])
+  PayrollCycle    PayrollCycle @relation(fields: [cycleId], references: [id])
+}
