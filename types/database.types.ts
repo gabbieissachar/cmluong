@@ -34,7 +34,49 @@ export type Database = {
     }
     public: {
         Tables: {
-            [_ in never]: never
+            payroll_cycles: {
+                Row: {
+                    id: string
+                    month: string
+                    status: string
+                }
+                Insert: {
+                    id?: string
+                    month: string
+                    status?: string
+                }
+                Update: {
+                    id?: string
+                    month?: string
+                    status?: string
+                }
+            }
+            timesheet_entries: {
+                Row: {
+                    id: string
+                    cycle_id: string
+                    user_id: string
+                    entry_date: string
+                    hours: number | null
+                    created_at: string
+                }
+                Insert: {
+                    id?: string
+                    cycle_id: string
+                    user_id: string
+                    entry_date: string
+                    hours?: number | null
+                    created_at?: string
+                }
+                Update: {
+                    id?: string
+                    cycle_id?: string
+                    user_id?: string
+                    entry_date?: string
+                    hours?: number | null
+                    created_at?: string
+                }
+            }
         }
         Views: {
             [_ in never]: never
