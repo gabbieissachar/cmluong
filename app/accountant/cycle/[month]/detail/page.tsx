@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ReactNode } from 'react';
 import { useParams } from 'next/navigation';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -70,6 +69,7 @@ export default function CycleDetailPage({
   const { month } = params;
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [visibleColumns, setVisibleColumns] = useState<Set<keyof Entry>>(
     new Set(allColumns.map((col) => col.key))
   );
@@ -119,11 +119,31 @@ export default function CycleDetailPage({
     }
   };
 
+  const toggleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelected(new Set(entries.map(e => e.id)));
+    } else {
+      setSelected(new Set());
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
   useEffect(() => {
     const fetchEntries = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/cycle/${month}/entries`);
+        const res = await fetch(`/api/cycle/${month}/entries-with-payslip`);
         const data = await res.json();
         setEntries(data.entries);
       } catch (error) {
@@ -224,35 +244,77 @@ export default function CycleDetailPage({
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>
+                <Checkbox
+                  checked={selected.size === entries.length && entries.length > 0}
+                  onCheckedChange={(checked) => toggleSelectAll(!!checked)}
+                />
+              </TableHead>
               {allColumns.map((column) =>
                 visibleColumns.has(column.key) && (
                   <TableHead key={column.key}>{column.label}</TableHead>
                 )
               )}
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {entries.map((entry) => (
               <TableRow key={entry.id}>
+                <TableCell>
+                  <Checkbox
+                    checked={selected.has(entry.id)}
+                    onCheckedChange={() => toggleSelect(entry.id)}
+                  />
+                </TableCell>
                 {allColumns.map((column) =>
                   visibleColumns.has(column.key) && (
                     <TableCell key={column.key}>
                       {column.key === 'payslip_pdf' ? (
                         entry.payslip_pdf ? (
-                          <a href={entry.payslip_pdf} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">View Payslip</a>
+                          <a
+                            href={entry.payslip_pdf}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline"
+                          >
+                            View Payslip
+                          </a>
                         ) : (
                           'N/A'
                         )
                       ) : (
-                        entry[column.key] as React.ReactNode
+                        entry[column.key] as ReactNode
                       )}
                     </TableCell>
                   )
                 )}
+                <TableCell>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm">Edit Entry</Button>
+                    <Button variant="outline" size="sm">Generate Payslip</Button>
+                    {entry.payslip_pdf && (
+                      <a
+                        href={entry.payslip_pdf}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline"
+                      >
+                        PDF
+                      </a>
+                    )}
+                  </div>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
+        {selected.size > 0 && (
+          <div className="mt-4 p-4 bg-gray-100 rounded flex gap-2">
+            <Button variant="secondary">Bulk Edit</Button>
+            <Button>Generate Payslip(s)</Button>
+          </div>
+        )}
       </div>
     </>
   );
