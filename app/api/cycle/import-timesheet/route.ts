@@ -18,6 +18,21 @@ export async function POST(req: Request) {
   }
   const file = formData.get('file') as File | null
 
+  // Check if a payroll cycle for this month already exists
+  const { data: existingCycle } = await supabaseAdmin
+    .from('payroll_cycles')
+    .select('id')
+    .eq('month', month)
+    .single()
+
+  if (existingCycle) {
+    // If a cycle exists, return a conflict response
+    return NextResponse.json(
+      { error: `Payroll cycle for ${month} already exists.` },
+      { status: 409 }
+    )
+  }
+
   let entries: { user_id: string; entry_date: string; hours: number | null }[] = []
 
   if (file) {
@@ -40,17 +55,25 @@ export async function POST(req: Request) {
     }
   }
 
-  const { data: cycle } = await supabaseAdmin
-    .from('payroll_cycles')
-    .insert({ month })
+  const formattedMonth = `${month}-01T00:00:00Z`;
+  const { data: cycle, error: insertError } = await supabaseAdmin
+    .from('PayrollCycle') // or 'payroll_cycles' if that's your actual table name
+    .insert({
+      id: crypto.randomUUID(),
+      month: formattedMonth,
+      status: 'DRAFT'
+    })
     .select()
-    .single()
+    .single();
+  console.log('Insert error:', insertError);
 
+  console.log('Cycle object before response:', cycle)
   if (cycle && entries.length > 0) {
     await supabaseAdmin
       .from('timesheet_entries')
       .insert(entries.map((e) => ({ ...e, cycle_id: cycle.id })))
   }
 
+  console.log('Cycle object before response:', cycle)
   return NextResponse.json({ id: cycle?.id })
 }

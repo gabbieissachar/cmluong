@@ -6,22 +6,36 @@ export default function CyclePage({ params }: { params: { month: string } }) {
   const [file, setFile] = useState<File | null>(null)
   const router = useRouter()
 
-  async function handleImport(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    const data = new FormData()
-    if (file) data.append('file', file)
-    data.append('month', params.month)
-    await fetch('/app/api/cycle/import-timesheet', {
-      method: 'POST',
-      body: data,
-    })
-    router.refresh()
-  }
+  const handleImport = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!file) {
+        alert('Please select a file first.');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('month', params.month);
+
+    try {
+        const response = await fetch('/api/cycle/import-timesheet', {
+            method: 'POST',
+            body: formData,
+        });
+
+        const result = await response.json();
+        console.log('API Response:', JSON.stringify(result, null, 2));
+        router.refresh()
+    } catch (error) {
+        console.error('Error importing timesheet:', error);
+        alert('Error importing timesheet.');
+    }
+  };
 
   async function handleClone() {
     const data = new FormData()
     data.append('month', params.month)
-    await fetch('/app/api/cycle/import-timesheet', {
+    await fetch('/api/cycle/import-timesheet', {
       method: 'POST',
       body: data,
     })
