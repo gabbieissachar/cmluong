@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { toast } from '@/hooks/use-toast'
+import { useToast } from '@/hooks/use-toast'
+import { Loader2 } from 'lucide-react'
 
 export interface TimesheetEntry {
   id: string
@@ -20,7 +21,9 @@ interface Props {
 }
 
 export default function EditEntryDialog({ entry, open, onOpenChange, onSuccess }: Props) {
+  const { toast } = useToast()
   const [form, setForm] = useState({ salary: '', parking_allowance: '', actual_working_days: '' })
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     if (entry) {
@@ -39,22 +42,29 @@ export default function EditEntryDialog({ entry, open, onOpenChange, onSuccess }
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!entry) return
-    const res = await fetch(`/api/timesheet-entry/${entry.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        salary: form.salary ? Number(form.salary) : null,
-        parking_allowance: form.parking_allowance ? Number(form.parking_allowance) : null,
-        actual_working_days: form.actual_working_days ? Number(form.actual_working_days) : null,
-      }),
-    })
-    if (res.ok) {
-      toast({ title: 'Entry updated' })
-      onSuccess()
-      onOpenChange(false)
-    } else {
-      const data = await res.json()
-      toast({ title: data.error || 'Update failed', variant: 'destructive' })
+    setIsSubmitting(true)
+    try {
+      const res = await fetch(`/api/timesheet-entry/${entry.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          salary: form.salary ? Number(form.salary) : null,
+          parking_allowance: form.parking_allowance ? Number(form.parking_allowance) : null,
+          actual_working_days: form.actual_working_days ? Number(form.actual_working_days) : null,
+        }),
+      })
+      if (res.ok) {
+        toast({ title: 'Entry updated' })
+        onSuccess()
+        onOpenChange(false)
+      } else {
+        const data = await res.json()
+        toast({ title: data.error || 'Update failed', variant: 'destructive' })
+      }
+    } catch (err) {
+      toast({ title: 'Update failed', variant: 'destructive' })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -81,7 +91,10 @@ export default function EditEntryDialog({ entry, open, onOpenChange, onSuccess }
             onChange={e => updateField('actual_working_days', e.target.value)}
           />
           <DialogFooter>
-            <Button type="submit">Save</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

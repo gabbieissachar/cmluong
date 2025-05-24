@@ -3,6 +3,9 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import Link from 'next/link'
+import { Loader2 } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
+import { Toaster } from '@/components/ui/sonner'
 
 type Cycle = {
   id: string
@@ -12,7 +15,9 @@ type Cycle = {
 
 export default function AccountantOverviewPage() {
   const [cycles, setCycles] = useState<Cycle[]>([])
+  const [loadingCycle, setLoadingCycle] = useState<string | null>(null)
   const router = useRouter()
+  const { toast } = useToast()
 
   useEffect(() => {
     fetch("/api/cycle/list")
@@ -56,21 +61,35 @@ export default function AccountantOverviewPage() {
                   <Button variant="outline" onClick={() => router.push(`/accountant/cycle/${cycle.month?.slice(0, 7)}/detail`)}>
                     View Details
                   </Button>
-                  <Button variant="outline" onClick={async () => {
-                    const response = await fetch('/api/cycle/calculate-payslip', {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                      },
-                      body: JSON.stringify({ cycleId: cycle.id }),
-                    });
-                    const result = await response.json();
-                    if (result.error) {
-                      console.error(result.error);
-                    } else {
-                      console.log(result.message);
-                    }
-                  }}>
+                  <Button
+                    variant="outline"
+                    disabled={loadingCycle === cycle.id}
+                    onClick={async () => {
+                      setLoadingCycle(cycle.id)
+                      try {
+                        const response = await fetch('/api/cycle/calculate-payslip', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify({ cycleId: cycle.id }),
+                        })
+                        const result = await response.json()
+                        if (response.ok) {
+                          toast({ title: 'Payslips calculated' })
+                        } else {
+                          toast({ title: result.error || 'Calculation failed', variant: 'destructive' })
+                        }
+                      } catch (err) {
+                        toast({ title: 'Calculation failed', variant: 'destructive' })
+                      } finally {
+                        setLoadingCycle(null)
+                      }
+                    }}
+                  >
+                    {loadingCycle === cycle.id && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
                     Calculate Payslips
                   </Button>
                 </td>
@@ -79,6 +98,7 @@ export default function AccountantOverviewPage() {
           </tbody>
         </table>
       </div>
+      <Toaster />
     </>
   )
 }

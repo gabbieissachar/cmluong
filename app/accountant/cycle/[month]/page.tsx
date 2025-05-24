@@ -3,11 +3,17 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth, SignOutButton } from '@clerk/nextjs'
+import { Loader2 } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
+import { Toaster } from '@/components/ui/sonner'
 
 export default function CyclePage({ params }: { params: { month: string } }) {
   const [file, setFile] = useState<File | null>(null)
   const router = useRouter()
   const { isSignedIn } = useAuth();
+  const { toast } = useToast()
+  const [importing, setImporting] = useState(false)
+  const [cloning, setCloning] = useState(false)
 
   const handleImport = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -21,28 +27,47 @@ export default function CyclePage({ params }: { params: { month: string } }) {
     formData.append('month', params.month);
 
     try {
+        setImporting(true)
         const response = await fetch('/api/cycle/import-timesheet', {
             method: 'POST',
             body: formData,
         });
 
         const result = await response.json();
-        console.log('API Response:', JSON.stringify(result, null, 2));
-        router.refresh()
+        if (response.ok) {
+            toast({ title: 'Timesheet imported' })
+            router.refresh()
+        } else {
+            toast({ title: result.error || 'Import failed', variant: 'destructive' })
+        }
     } catch (error) {
-        console.error('Error importing timesheet:', error);
-        alert('Error importing timesheet.');
+        toast({ title: 'Import failed', variant: 'destructive' })
+    } finally {
+        setImporting(false)
     }
   };
 
   async function handleClone() {
     const data = new FormData()
     data.append('month', params.month)
-    await fetch('/api/cycle/import-timesheet', {
-      method: 'POST',
-      body: data,
-    })
-    router.refresh()
+    try {
+      setCloning(true)
+      const res = await fetch('/api/cycle/import-timesheet', {
+        method: 'POST',
+        body: data,
+      })
+      const result = await res.json()
+      if (res.ok) {
+        toast({ title: 'Last month cloned' })
+        router.refresh()
+      } else {
+        toast({ title: result.error || 'Clone failed', variant: 'destructive' })
+      }
+    } catch (err) {
+      toast({ title: 'Clone failed', variant: 'destructive' })
+    } finally {
+      setCloning(false)
+    }
   }
 
   return (
@@ -67,9 +92,16 @@ export default function CyclePage({ params }: { params: { month: string } }) {
       <div className="p-4">
         <form onSubmit={handleImport} className="mb-4 flex gap-2">
           <input type="file" accept=".csv" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-          <button type="submit" className="rounded bg-black px-3 py-1 text-white">Import CSV</button>
+          <button type="submit" className="rounded bg-black px-3 py-1 text-white" disabled={importing}>
+            {importing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Import CSV
+          </button>
         </form>
-        <button onClick={handleClone} className="rounded bg-gray-300 px-3 py-1">Clone Last Month</button>
+        <button onClick={handleClone} className="rounded bg-gray-300 px-3 py-1" disabled={cloning}>
+          {cloning && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Clone Last Month
+        </button>
+        <Toaster />
       </div>
     </>
   )

@@ -11,7 +11,9 @@ import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMe
 import { ChevronDownIcon } from '@radix-ui/react-icons';
 import Link from 'next/link'
 import EditEntryDialog from '@/components/edit-entry-dialog'
-import { Toaster } from '@/components/ui/toaster'
+import { Toaster } from '@/components/ui/sonner'
+import { Loader2 } from 'lucide-react'
+import { useToast } from '@/hooks/use-toast'
 
 type Entry = {
   id: string
@@ -79,6 +81,9 @@ export default function CycleDetailPage({
   const [newConfigName, setNewConfigName] = useState('');
   const [editing, setEditing] = useState<Entry | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const { toast } = useToast()
+  const [generating, setGenerating] = useState<string | null>(null)
+  const [bulkGenerating, setBulkGenerating] = useState(false)
 
   useEffect(() => {
     const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -142,6 +147,55 @@ export default function CycleDetailPage({
       return next;
     });
   };
+
+  const generatePayslip = async (entry: Entry) => {
+    setGenerating(entry.id)
+    try {
+      const res = await fetch('/api/cycle/calculate-payslip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cycleId: entry.cycle_id, userIds: [entry.user_id] }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        toast({ title: 'Payslip generated' })
+        fetchEntries()
+      } else {
+        toast({ title: data.error || 'Generation failed', variant: 'destructive' })
+      }
+    } catch (err) {
+      toast({ title: 'Generation failed', variant: 'destructive' })
+    } finally {
+      setGenerating(null)
+    }
+  }
+
+  const generateBulkPayslips = async () => {
+    if (selected.size === 0) return
+    setBulkGenerating(true)
+    const userIds = Array.from(selected).map(
+      (id) => entries.find((e) => e.id === id)?.user_id
+    ).filter(Boolean)
+    try {
+      const res = await fetch('/api/cycle/calculate-payslip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cycleId: entries[0].cycle_id, userIds }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        toast({ title: 'Payslips generated' })
+        setSelected(new Set())
+        fetchEntries()
+      } else {
+        toast({ title: data.error || 'Generation failed', variant: 'destructive' })
+      }
+    } catch (err) {
+      toast({ title: 'Generation failed', variant: 'destructive' })
+    } finally {
+      setBulkGenerating(false)
+    }
+  }
 
   const fetchEntries = useCallback(async () => {
     setLoading(true)
@@ -305,7 +359,17 @@ export default function CycleDetailPage({
                     >
                       Edit Entry
                     </Button>
-                    <Button variant="outline" size="sm">Generate Payslip</Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={generating === entry.id}
+                      onClick={() => generatePayslip(entry)}
+                    >
+                      {generating === entry.id && (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      )}
+                      Generate Payslip
+                    </Button>
                     {entry.payslip_pdf && (
                       <a
                         href={entry.payslip_pdf}
@@ -325,7 +389,12 @@ export default function CycleDetailPage({
         {selected.size > 0 && (
           <div className="mt-4 p-4 bg-gray-100 rounded flex gap-2">
             <Button variant="secondary">Bulk Edit</Button>
-            <Button>Generate Payslip(s)</Button>
+            <Button onClick={generateBulkPayslips} disabled={bulkGenerating}>
+              {bulkGenerating && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Generate Payslip(s)
+            </Button>
           </div>
         )}
       </div>
