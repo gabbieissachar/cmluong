@@ -14,7 +14,7 @@ export default function SignUpPage() {
         password, // Ensure this is at least 8 characters
         publicMetadata: { role },
       })
-      redirect('/app/(auth)/sign-in')
+      redirect('/sign-in')
     } catch (error: any) {
       console.error('Clerk createUser error:', error);
       if (error && error.errors) {
