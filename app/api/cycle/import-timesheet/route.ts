@@ -1,6 +1,5 @@
 import { supabaseAdmin } from '@/utils/supabase/admin'
 import { NextResponse } from 'next/server'
-import { calculatePayroll } from '@/lib/payroll'
 
 // Robust CSV parser for quoted/multiline fields
 function parseCsv(text: string) {
@@ -27,7 +26,7 @@ function parseCsv(text: string) {
     }
   }
   if (current) rows.push(current)
-  const headers = rows[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''))
+  const headers = rows[0].split(',').map((h) => h.trim().replace(/^"|"$/g, ''))
   return rows.slice(1).map((row) => {
     const values = []
     let val = ''
@@ -47,20 +46,22 @@ function parseCsv(text: string) {
     const record = {}
     headers.forEach((header, idx) => {
       let value = values[idx]?.trim().replace(/^"|"$/g, '')
-      if ([
-        'total_leave_days',
-        'salary',
-        'total_working_days_in_month',
-        'paid_leave_days',
-        'unpaid_leave_days',
-        'actual_working_days',
-        'parking_allowance',
-        'employee_social_insurance_contribution',
-        'salary_advance_deduction',
-        'tuition_fee_deduction_for_children',
-        'employer_social_insurance_contribution',
-        'hours'
-      ].includes(header)) {
+      if (
+        [
+          'total_leave_days',
+          'salary',
+          'total_working_days_in_month',
+          'paid_leave_days',
+          'unpaid_leave_days',
+          'actual_working_days',
+          'parking_allowance',
+          'employee_social_insurance_contribution',
+          'salary_advance_deduction',
+          'tuition_fee_deduction_for_children',
+          'employer_social_insurance_contribution',
+          'hours',
+        ].includes(header)
+      ) {
         value = value ? Number(value.replace(/,/g, '')) : null
       }
       record[header] = value
@@ -123,12 +124,20 @@ export async function POST(req: Request) {
     } else {
       console.log('Timesheet entries inserted successfully')
       try {
-        await calculatePayroll(cycle.id)
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cycle/calculate-payslip`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cycleId: cycle.id }),
+          }
+        )
+        const result = await response.json()
+        console.log('Payslip calculation result:', result)
       } catch (error) {
-        console.error('Error calculating payroll:', error)
+        console.error('Error calling payslip calculation endpoint:', error)
       }
     }
   }
-
   return NextResponse.json({ id: cycle?.id })
 }

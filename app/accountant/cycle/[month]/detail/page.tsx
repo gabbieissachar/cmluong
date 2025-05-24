@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ChevronDownIcon } from '@radix-ui/react-icons';
+import Link from 'next/link'
 
 type Entry = {
   id: string
@@ -140,103 +141,119 @@ export default function CycleDetailPage({
   }
 
   return (
-    <div className="container mx-auto py-10">
-      <h1 className="text-2xl font-bold mb-6">Payroll Cycle Detail for {month}</h1>
-
-      <div className="flex justify-between mb-4">
-        <div className="flex items-center space-x-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="ml-auto">
-                Columns <ChevronDownIcon className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuCheckboxItem
-                checked={visibleColumns.size === allColumns.length}
-                onCheckedChange={handleSelectAll}
-              >
-                Select All
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={visibleColumns.size === 0}
-                onCheckedChange={handleDeselectAll}
-              >
-                Deselect All
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuSeparator />
-              {allColumns.map((column) => (
-                <DropdownMenuCheckboxItem
-                  key={column.key}
-                  className="capitalize"
-                  checked={visibleColumns.has(column.key)}
-                  onCheckedChange={() => handleColumnToggle(column.key)}
-                >
-                  {column.label}
-                </DropdownMenuCheckboxItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <div className="flex items-center space-x-2">
-            <Input
-              placeholder="New config name"
-              value={newConfigName}
-              onChange={(e) => setNewConfigName(e.target.value)}
-              className="w-[200px]"
-            />
-            <Button onClick={handleSaveConfig}>Save Config</Button>
-          </div>
-
-          {savedConfigs.length > 0 && (
-            <Select onValueChange={handleLoadConfig}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Load Config" />
-              </SelectTrigger>
-              <SelectContent>
-                {savedConfigs.map(config => (
-                  <SelectItem key={config.name} value={config.name}>
-                    {config.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+    <>
+      <nav className="w-full flex justify-between items-center p-4 border-b mb-6">
+        <div className="text-lg font-bold">CM Salary Tool</div>
+        <div className="flex gap-2">
+          {/* TODO: Add logic to show Sign Out if signed in */}
+          <Link href="/sign-up">
+            <button className="px-4 py-2 bg-black text-white rounded">Sign Up</button>
+          </Link>
+          <Link href="/accountant/">
+            <button className="px-4 py-2 bg-blue-600 text-white rounded">Accountant Cycle</button>
+          </Link>
         </div>
-      </div>
+      </nav>
+      <div className="container mx-auto py-10">
+        <h1 className="text-2xl font-bold mb-6">Payroll Cycle Detail for {month}</h1>
 
-      <div className="rounded-md border">
+        <div className="flex justify-between mb-4">
+          <div className="flex items-center space-x-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="ml-auto">
+                  Columns <ChevronDownIcon className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuCheckboxItem
+                  checked={visibleColumns.size === allColumns.length}
+                  onCheckedChange={handleSelectAll}
+                >
+                  Select All
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={visibleColumns.size === 0}
+                  onCheckedChange={handleDeselectAll}
+                >
+                  Deselect All
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuSeparator />
+                {allColumns.map((column) => (
+                  <DropdownMenuCheckboxItem
+                    key={column.key}
+                    className="capitalize"
+                    checked={visibleColumns.has(column.key)}
+                    onCheckedChange={() => handleColumnToggle(column.key)}
+                  >
+                    {column.label}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <div className="flex items-center space-x-2">
+              <Input
+                placeholder="New config name"
+                value={newConfigName}
+                onChange={(e) => setNewConfigName(e.target.value)}
+                className="w-[200px]"
+              />
+              <Button onClick={handleSaveConfig}>Save Config</Button>
+            </div>
+
+            {savedConfigs.length > 0 && (
+              <Select onValueChange={handleLoadConfig}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Load Config" />
+                </SelectTrigger>
+                <SelectContent>
+                  {savedConfigs.map(config => (
+                    <SelectItem key={config.name} value={config.name}>
+                      {config.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+        </div>
+
         <Table>
           <TableHeader>
             <TableRow>
-              {allColumns.map(
-                (column) =>
-                  visibleColumns.has(column.key) && (
-                    <TableHead key={column.key}>{column.label}</TableHead>
-                  )
+              {allColumns.map((column) =>
+                visibleColumns.has(column.key) && (
+                  <TableHead key={column.key}>{column.label}</TableHead>
+                )
               )}
             </TableRow>
           </TableHeader>
           <TableBody>
             {entries.map((entry) => (
               <TableRow key={entry.id}>
-                {allColumns.map(
-                  (column) =>
-                    visibleColumns.has(column.key) && (
-                      <TableCell key={column.key}>
-                        {entry[column.key] !== null && entry[column.key] !== undefined
-                          ? entry[column.key].toString()
-                          : 'N/A'}
-                      </TableCell>
-                    )
+                {allColumns.map((column) =>
+                  visibleColumns.has(column.key) && (
+                    <TableCell key={column.key}>
+                      {column.key === 'payslip_pdf' ? (
+                        entry.payslip_pdf ? (
+                          <a href={entry.payslip_pdf} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">View Payslip</a>
+                        ) : (
+                          'N/A'
+                        )
+                      ) : (
+                        entry[column.key] as React.ReactNode
+                      )}
+                    </TableCell>
+                  )
                 )}
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
-    </div>
+    </>
   );
 }

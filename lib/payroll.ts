@@ -22,17 +22,16 @@ export async function calculatePayroll(cycleId: string) {
     const baseSalary = entry.salary ?? 0
     const allowance = entry.parking_allowance ?? 0
     const deductions =
-      (entry.salary_advance_deduction ?? 0) +
-      (entry.tuition_fee_deduction_for_children ?? 0)
+      (entry.salary_advance_deduction ?? 0) + (entry.tuition_fee_deduction_for_children ?? 0)
     const employeeSI = entry.employee_social_insurance_contribution ?? 0
     const employerSI = entry.employer_social_insurance_contribution ?? 0
     const netSalary = baseSalary + allowance - deductions - employeeSI
 
     const { data: existing, error: existingError } = await supabaseAdmin
-      .from('Payslip')
+      .from('payslip')
       .select('id')
-      .eq('userId', entry.user_id)
-      .eq('cycleId', cycleId)
+      .eq('user_id', entry.user_id)
+      .eq('cycle_id', cycleId)
       .limit(1)
       .maybeSingle()
 
@@ -42,19 +41,20 @@ export async function calculatePayroll(cycleId: string) {
     }
 
     const payload = {
-      userId: entry.user_id,
-      cycleId,
-      baseSalary,
-      allowance,
-      deductions,
-      employeeSI,
-      employerSI,
-      netSalary,
+      user_id: entry.user_id,
+      cycle_id: cycleId,
+      base_salary: baseSalary,
+      allowance: allowance,
+      deductions: deductions,
+      employee_si: employeeSI,
+      employer_si: employerSI,
+      net_salary: netSalary,
     }
 
     if (existing) {
+      console.log('Updating existing payslip with ID:', existing.id)
       const { error: updateError } = await supabaseAdmin
-        .from('Payslip')
+        .from('payslip')
         .update(payload)
         .eq('id', existing.id)
 
@@ -65,12 +65,13 @@ export async function calculatePayroll(cycleId: string) {
       }
     } else {
       const id = randomUUID()
-      const { error: insertError } = await supabaseAdmin
-        .from('Payslip')
-        .insert({ id, ...payload })
+      console.log('Attempting to insert new payslip with ID:', id)
+      console.log('Payload:', payload)
+      const { error: insertError } = await supabaseAdmin.from('payslip').insert({ id, ...payload })
 
       if (insertError) {
         console.error('Error creating payslip:', insertError)
+        console.error('Detailed error:', insertError)
       } else {
         created++
       }
