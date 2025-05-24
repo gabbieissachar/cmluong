@@ -1,205 +1,235 @@
-export type Json =
-    | string
-    | number
-    | boolean
-    | null
-    | { [key: string]: Json | undefined }
-    | Json[]
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type Database = {
-    graphql_public: {
-        Tables: {
-            [_ in never]: never
-        }
-        Views: {
-            [_ in never]: never
-        }
-        Functions: {
-            graphql: {
-                Args: {
-                    operationName?: string
-                    query?: string
-                    variables?: Json
-                    extensions?: Json
-                }
-                Returns: Json
-            }
-        }
-        Enums: {
-            [_ in never]: never
-        }
-        CompositeTypes: {
-            [_ in never]: never
-        }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
     }
-    public: {
-        Tables: {
-            payroll_cycles: {
-                Row: {
-                    id: string
-                    month: string
-                    status: string
-                }
-                Insert: {
-                    id?: string
-                    month: string
-                    status?: string
-                }
-                Update: {
-                    id?: string
-                    month?: string
-                    status?: string
-                }
-            }
-            timesheet_entries: {
-                Row: {
-                    id: string
-                    cycle_id: string
-                    user_id: string
-                    entry_date: string
-                    hours: number | null
-                    created_at: string
-                }
-                Insert: {
-                    id?: string
-                    cycle_id: string
-                    user_id: string
-                    entry_date: string
-                    hours?: number | null
-                    created_at?: string
-                }
-                Update: {
-                    id?: string
-                    cycle_id?: string
-                    user_id?: string
-                    entry_date?: string
-                    hours?: number | null
-                    created_at?: string
-                }
-            }
-        }
-        Views: {
-            [_ in never]: never
-        }
-        Functions: {
-            requesting_user_id: {
-                Args: Record<PropertyKey, never>
-                Returns: string
-            }
-        }
-        Enums: {
-            pricing_plan_interval: "day" | "week" | "month" | "year"
-            pricing_type: "one_time" | "recurring"
-            subscription_status:
-            | "trialing"
-            | "active"
-            | "canceled"
-            | "incomplete"
-            | "incomplete_expired"
-            | "past_due"
-            | "unpaid"
-            | "paused"
-        }
-        CompositeTypes: {
-            [_ in never]: never
-        }
+    Views: {
+      [_ in never]: never
     }
+    Functions: {
+      graphql: {
+        Args: {
+          operationName?: string
+          query?: string
+          variables?: Json
+          extensions?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+  public: {
+    Tables: {
+      payroll_cycles: {
+        Row: {
+          id: string
+          month: string
+          status: string
+        }
+        Insert: {
+          id?: string
+          month: string
+          status?: string
+        }
+        Update: {
+          id?: string
+          month?: string
+          status?: string
+        }
+      }
+      timesheet_entries: {
+        Row: {
+          id: string
+          cycle_id: string
+          user_id: string
+          full_name: string
+          position: string
+          total_leave_days: number | null
+          bank_account_information: string
+          department: string
+          salary: number | null
+          total_working_days_in_month: number | null
+          paid_leave_days: number | null
+          unpaid_leave_days: number | null
+          actual_working_days: number | null
+          parking_allowance: number | null
+          employee_social_insurance_contribution: number | null
+          salary_advance_deduction: number | null
+          tuition_fee_deduction_for_children: number | null
+          employer_social_insurance_contribution: number | null
+          entry_date?: string
+          hours?: number | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          cycle_id: string
+          user_id: string
+          full_name: string
+          position: string
+          total_leave_days?: number | null
+          bank_account_information: string
+          department: string
+          salary?: number | null
+          total_working_days_in_month?: number | null
+          paid_leave_days?: number | null
+          unpaid_leave_days?: number | null
+          actual_working_days?: number | null
+          parking_allowance?: number | null
+          employee_social_insurance_contribution?: number | null
+          salary_advance_deduction?: number | null
+          tuition_fee_deduction_for_children?: number | null
+          employer_social_insurance_contribution?: number | null
+          entry_date?: string
+          hours?: number | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          cycle_id?: string
+          user_id?: string
+          full_name?: string
+          position?: string
+          total_leave_days?: number | null
+          bank_account_information?: string
+          department?: string
+          salary?: number | null
+          total_working_days_in_month?: number | null
+          paid_leave_days?: number | null
+          unpaid_leave_days?: number | null
+          actual_working_days?: number | null
+          parking_allowance?: number | null
+          employee_social_insurance_contribution?: number | null
+          salary_advance_deduction?: number | null
+          tuition_fee_deduction_for_children?: number | null
+          employer_social_insurance_contribution?: number | null
+          entry_date?: string
+          hours?: number | null
+          created_at?: string
+        }
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      requesting_user_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+    }
+    Enums: {
+      pricing_plan_interval: 'day' | 'week' | 'month' | 'year'
+      pricing_type: 'one_time' | 'recurring'
+      subscription_status:
+        | 'trialing'
+        | 'active'
+        | 'canceled'
+        | 'incomplete'
+        | 'incomplete_expired'
+        | 'past_due'
+        | 'unpaid'
+        | 'paused'
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
 }
 
-type PublicSchema = Database[Extract<keyof Database, "public">]
+type PublicSchema = Database[Extract<keyof Database, 'public'>]
 
 export type Tables<
-    PublicTableNameOrOptions extends
-    | keyof (PublicSchema["Tables"] & PublicSchema["Views"])
+  PublicTableNameOrOptions extends
+    | keyof (PublicSchema['Tables'] & PublicSchema['Views'])
     | { schema: keyof Database },
-    TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-        Database[PublicTableNameOrOptions["schema"]]["Views"])
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof (Database[PublicTableNameOrOptions['schema']]['Tables'] &
+        Database[PublicTableNameOrOptions['schema']]['Views'])
     : never = never,
 > = PublicTableNameOrOptions extends { schema: keyof Database }
-    ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
-        Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-            Row: infer R
-        }
+  ? (Database[PublicTableNameOrOptions['schema']]['Tables'] &
+      Database[PublicTableNameOrOptions['schema']]['Views'])[TableName] extends {
+      Row: infer R
+    }
     ? R
     : never
-    : PublicTableNameOrOptions extends keyof (PublicSchema["Tables"] &
-        PublicSchema["Views"])
-    ? (PublicSchema["Tables"] &
-        PublicSchema["Views"])[PublicTableNameOrOptions] extends {
-            Row: infer R
-        }
-    ? R
-    : never
+  : PublicTableNameOrOptions extends keyof (PublicSchema['Tables'] & PublicSchema['Views'])
+    ? (PublicSchema['Tables'] & PublicSchema['Views'])[PublicTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
     : never
 
 export type TablesInsert<
-    PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
-    | { schema: keyof Database },
-    TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  PublicTableNameOrOptions extends keyof PublicSchema['Tables'] | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicTableNameOrOptions['schema']]['Tables']
     : never = never,
 > = PublicTableNameOrOptions extends { schema: keyof Database }
-    ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-        Insert: infer I
+  ? Database[PublicTableNameOrOptions['schema']]['Tables'][TableName] extends {
+      Insert: infer I
     }
     ? I
     : never
-    : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+  : PublicTableNameOrOptions extends keyof PublicSchema['Tables']
+    ? PublicSchema['Tables'][PublicTableNameOrOptions] extends {
         Insert: infer I
-    }
-    ? I
-    : never
+      }
+      ? I
+      : never
     : never
 
 export type TablesUpdate<
-    PublicTableNameOrOptions extends
-    | keyof PublicSchema["Tables"]
-    | { schema: keyof Database },
-    TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicTableNameOrOptions["schema"]]["Tables"]
+  PublicTableNameOrOptions extends keyof PublicSchema['Tables'] | { schema: keyof Database },
+  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicTableNameOrOptions['schema']]['Tables']
     : never = never,
 > = PublicTableNameOrOptions extends { schema: keyof Database }
-    ? Database[PublicTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-        Update: infer U
+  ? Database[PublicTableNameOrOptions['schema']]['Tables'][TableName] extends {
+      Update: infer U
     }
     ? U
     : never
-    : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
-    ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
+  : PublicTableNameOrOptions extends keyof PublicSchema['Tables']
+    ? PublicSchema['Tables'][PublicTableNameOrOptions] extends {
         Update: infer U
-    }
-    ? U
-    : never
+      }
+      ? U
+      : never
     : never
 
 export type Enums<
-    PublicEnumNameOrOptions extends
-    | keyof PublicSchema["Enums"]
-    | { schema: keyof Database },
-    EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
-    ? keyof Database[PublicEnumNameOrOptions["schema"]]["Enums"]
+  PublicEnumNameOrOptions extends keyof PublicSchema['Enums'] | { schema: keyof Database },
+  EnumName extends PublicEnumNameOrOptions extends { schema: keyof Database }
+    ? keyof Database[PublicEnumNameOrOptions['schema']]['Enums']
     : never = never,
 > = PublicEnumNameOrOptions extends { schema: keyof Database }
-    ? Database[PublicEnumNameOrOptions["schema"]]["Enums"][EnumName]
-    : PublicEnumNameOrOptions extends keyof PublicSchema["Enums"]
-    ? PublicSchema["Enums"][PublicEnumNameOrOptions]
+  ? Database[PublicEnumNameOrOptions['schema']]['Enums'][EnumName]
+  : PublicEnumNameOrOptions extends keyof PublicSchema['Enums']
+    ? PublicSchema['Enums'][PublicEnumNameOrOptions]
     : never
 
 export type CompositeTypes<
-    PublicCompositeTypeNameOrOptions extends
-    | keyof PublicSchema["CompositeTypes"]
+  PublicCompositeTypeNameOrOptions extends
+    | keyof PublicSchema['CompositeTypes']
     | { schema: keyof Database },
-    CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-        schema: keyof Database
-    }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof Database
+  }
+    ? keyof Database[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-    ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-    : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
-    ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+  ? Database[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof PublicSchema['CompositeTypes']
+    ? PublicSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
     : never
-

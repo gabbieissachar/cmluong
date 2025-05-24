@@ -13,7 +13,7 @@ export default function Home() {
           <Link href="/sign-up">
             <button className="px-4 py-2 bg-black text-white rounded">Sign Up</button>
           </Link>
-          <Link href="/accountant/cycle/2024-01">
+          <Link href="/accountant/">
             <button className="px-4 py-2 bg-blue-600 text-white rounded">Accountant Cycle</button>
           </Link>
         </div>
