@@ -11,15 +11,6 @@ export async function POST(req: Request) {
   try {
     const payslipData = await calculatePayroll(cycleId)
 
-    // Insert the calculated payslip into the payslip table
-    const { error: payslipInsertError } = await supabaseAdmin
-      .from('payslips')
-      .insert({ cycle_id: cycleId, ...payslipData })
-    if (payslipInsertError) {
-      console.error('Error inserting payslip:', payslipInsertError)
-      return NextResponse.json({ error: 'Error inserting payslip' }, { status: 500 })
-    }
-
     return NextResponse.json({ message: 'Payslip calculated and inserted successfully' })
   } catch (error) {
     console.error('Error calculating payroll:', error)
