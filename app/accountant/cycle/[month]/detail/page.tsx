@@ -4,6 +4,16 @@ import { useState, useEffect, ReactNode, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogFooter,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -11,6 +21,7 @@ import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMe
 import { ChevronDownIcon } from '@radix-ui/react-icons';
 import Link from 'next/link'
 import EditEntryDialog from '@/components/edit-entry-dialog'
+import BulkEditDialog from '@/components/bulk-edit-dialog'
 import { Toaster } from '@/components/ui/sonner'
 import { Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
@@ -84,6 +95,8 @@ export default function CycleDetailPage({
   const { toast } = useToast()
   const [generating, setGenerating] = useState<string | null>(null)
   const [bulkGenerating, setBulkGenerating] = useState(false)
+  const [bulkEditOpen, setBulkEditOpen] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   useEffect(() => {
     const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -388,13 +401,32 @@ export default function CycleDetailPage({
         </Table>
         {selected.size > 0 && (
           <div className="mt-4 p-4 bg-gray-100 rounded flex gap-2">
-            <Button variant="secondary">Bulk Edit</Button>
-            <Button onClick={generateBulkPayslips} disabled={bulkGenerating}>
-              {bulkGenerating && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Generate Payslip(s)
+            <Button variant="secondary" onClick={() => setBulkEditOpen(true)}>
+              Bulk Edit
             </Button>
+            <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+              <AlertDialogTrigger asChild>
+                <Button disabled={bulkGenerating}>
+                  {bulkGenerating && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Generate Payslip(s)
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    Generate payslips for selected entries?
+                  </AlertDialogTitle>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={generateBulkPayslips}>
+                    Confirm
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         )}
       </div>
@@ -403,6 +435,18 @@ export default function CycleDetailPage({
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         onSuccess={fetchEntries}
+      />
+      <BulkEditDialog
+        userIds={Array.from(selected).map(
+          id => entries.find(e => e.id === id)?.user_id || ''
+        )}
+        open={bulkEditOpen}
+        onOpenChange={setBulkEditOpen}
+        cycleId={entries[0]?.cycle_id}
+        onSuccess={() => {
+          setSelected(new Set())
+          fetchEntries()
+        }}
       />
       <Toaster />
     </>
