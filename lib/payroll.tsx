@@ -1,5 +1,7 @@
 import { supabaseAdmin } from '@/utils/supabase/admin'
 import { randomUUID } from 'crypto'
+import { pdf } from '@react-pdf/renderer'
+import { PayslipPdf, PayslipRow, TimesheetRow } from './payslip-pdf'
 
 export async function calculatePayroll(cycleId: string, userIds?: string[]) {
   let query = supabaseAdmin
@@ -46,7 +48,7 @@ export async function calculatePayroll(cycleId: string, userIds?: string[]) {
       continue
     }
 
-    const payload = {
+    const basePayload = {
       user_id: entry.user_id,
       cycle_id: cycleId,
       base_salary: baseSalary,
@@ -56,6 +58,20 @@ export async function calculatePayroll(cycleId: string, userIds?: string[]) {
       employer_si: employerSI,
       net_salary: netSalary,
     }
+
+    const id = existing?.id ?? randomUUID()
+    const pdfPath = `${cycleId}/${entry.user_id}.pdf`
+
+    const slipRecord = { id, ...basePayload, pdf_path: pdfPath } as PayslipRow
+    const pdfBuffer = await pdf(
+      <PayslipPdf slip={slipRecord} entry={entry as TimesheetRow} />
+    ).toBuffer()
+
+    await supabaseAdmin.storage
+      .from('payslips')
+      .upload(pdfPath, pdfBuffer, { contentType: 'application/pdf', upsert: true })
+
+    const payload = { ...basePayload, pdf_path: pdfPath }
 
     if (existing) {
       console.log('Updating existing payslip with ID:', existing.id)
@@ -70,7 +86,6 @@ export async function calculatePayroll(cycleId: string, userIds?: string[]) {
         updated++
       }
     } else {
-      const id = randomUUID()
       console.log('Attempting to insert new payslip with ID:', id)
       console.log('Payload:', payload)
       const { error: insertError } = await supabaseAdmin.from('payslip').insert({ id, ...payload })
