@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, ReactNode } from 'react';
+import { useState, useEffect, ReactNode, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ChevronDownIcon } from '@radix-ui/react-icons';
 import Link from 'next/link'
+import EditEntryDialog from '@/components/edit-entry-dialog'
+import { Toaster } from '@/components/ui/toaster'
 
 type Entry = {
   id: string
@@ -75,6 +77,8 @@ export default function CycleDetailPage({
   );
   const [savedConfigs, setSavedConfigs] = useState<{ name: string; columns: (keyof Entry)[] }[]>([]);
   const [newConfigName, setNewConfigName] = useState('');
+  const [editing, setEditing] = useState<Entry | null>(null)
+  const [dialogOpen, setDialogOpen] = useState(false)
 
   useEffect(() => {
     const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -139,22 +143,22 @@ export default function CycleDetailPage({
     });
   };
 
-  useEffect(() => {
-    const fetchEntries = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/cycle/${month}/entries-with-payslip`);
-        const data = await res.json();
-        setEntries(data.entries);
-      } catch (error) {
-        console.error('Failed to fetch entries:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchEntries = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/cycle/${month}/entries-with-payslip`)
+      const data = await res.json()
+      setEntries(data.entries)
+    } catch (error) {
+      console.error('Failed to fetch entries:', error)
+    } finally {
+      setLoading(false)
+    }
+  }, [month])
 
-    fetchEntries();
-  }, [month]);
+  useEffect(() => {
+    fetchEntries()
+  }, [fetchEntries])
 
   if (loading) {
     return <div>Loading...</div>;
@@ -291,7 +295,16 @@ export default function CycleDetailPage({
                 )}
                 <TableCell>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm">Edit Entry</Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setEditing(entry)
+                        setDialogOpen(true)
+                      }}
+                    >
+                      Edit Entry
+                    </Button>
                     <Button variant="outline" size="sm">Generate Payslip</Button>
                     {entry.payslip_pdf && (
                       <a
@@ -316,6 +329,13 @@ export default function CycleDetailPage({
           </div>
         )}
       </div>
+      <EditEntryDialog
+        entry={editing}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSuccess={fetchEntries}
+      />
+      <Toaster />
     </>
   );
 }
