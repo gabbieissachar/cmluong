@@ -47,10 +47,20 @@ export default function CreateCyclePage() {
     setError("")
     const data = new FormData()
     data.append("month", month)
-    // TODO: Implement clone API endpoint
-    // await fetch('/api/cycle/clone', { method: 'POST', body: data })
-    // router.push(`/accountant/cycle/${month}/detail`)
-    alert("Clone feature not implemented yet.")
+    try {
+      const res = await fetch("/api/cycle/clone", {
+        method: "POST",
+        body: data,
+      })
+      if (!res.ok) {
+        const result = await res.json()
+        setError(result.error || "Clone failed.")
+        return
+      }
+      router.push(`/accountant/cycle/${month}/detail`)
+    } catch {
+      setError("Error cloning cycle.")
+    }
   }
 
   return (
