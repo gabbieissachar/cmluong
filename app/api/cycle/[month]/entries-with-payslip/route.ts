@@ -31,7 +31,7 @@ export async function GET(req: Request, { params }: { params: { month: string } 
 
   const { data: payslips, error: payslipError } = await supabaseAdmin
     .from('payslip')
-    .select('user_id, net_salary, pdf_path')
+    .select('id, user_id, net_salary')
     .eq('cycle_id', cycle.id)
 
   if (payslipError) {
@@ -39,13 +39,13 @@ export async function GET(req: Request, { params }: { params: { month: string } 
     return NextResponse.json({ error: payslipError.message }, { status: 500 })
   }
 
-  const slipMap = new Map<string, { net_salary: number | null; pdf_path: string | null }>()
-  payslips?.forEach(ps => slipMap.set(ps.user_id, { net_salary: ps.net_salary, pdf_path: ps.pdf_path }))
+  const slipMap = new Map<string, { net_salary: number | null; id: string }>()
+  payslips?.forEach(ps => slipMap.set(ps.user_id, { net_salary: ps.net_salary, id: ps.id }))
 
   const combined = entries?.map(e => ({
     ...e,
     net_salary: slipMap.get(e.user_id)?.net_salary ?? null,
-    payslip_pdf: slipMap.get(e.user_id)?.pdf_path ?? null
+    payslip_pdf: slipMap.get(e.user_id)?.id ? `/api/payslip/${slipMap.get(e.user_id)!.id}` : null
   })) || []
 
   return NextResponse.json({ entries: combined })
