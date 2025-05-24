@@ -86,6 +86,9 @@ CLERK_JWT_TEMPLATE_NAME=payroll
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# Bulk Edit Fields
+NEXT_PUBLIC_BULK_EDIT_FIELDS=parking_allowance,salary_advance_deduction
 ```
 
 ## Features

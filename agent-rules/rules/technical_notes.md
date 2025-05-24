@@ -98,47 +98,6 @@ Reads `/docs`, obeys System Prompts
 
 ## /docs/BackendStructure.md
 
-### Data Models (Prisma)
-
-```prisma
-model User {
-  id          String   @id @default(cuid())
-  email       String   @unique
-  role        Role
-  fullName    String
-  bankAccount String?
-  payslips    Payslip[]
-}
-
-model PayrollCycle {
-  id        String   @id @default(cuid())
-  month     DateTime
-  status    CycleStatus  // DRAFT, PENDING_APPROVAL, APPROVED, PAID
-  payslips  Payslip[]
-  advanceAt DateTime?     // mid‑month advance date
-}
-
-model Payslip {
-  id              String   @id @default(cuid())
-  userId          String
-  cycleId         String
-  baseSalary      Int      // VND
-  allowance       Int
-  deductions      Int
-  employeeSI      Int
-  employerSI      Int
-  netSalary       Int
-  pdfPath         String?
-  confirmedByUser Boolean   @default(false)
-  User            User      @relation(fields: [userId], references: [id])
-  PayrollCycle    PayrollCycle @relation(fields: [cycleId], references: [id])
-}
-
-enum Role { LEADER ACCOUNTANT STAFF }
-enum CycleStatus { DRAFT PENDING_APPROVAL APPROVED PAID }
-
-```
-
 ### API Endpoints (TRPC‑style)
 
 Method
@@ -219,7 +178,6 @@ Always:
   • Ask for missing business logic or env variables.
   • Generate code inside src/ with proper file paths.
   • Follow ESLint & Prettier rules.
-  • Use Prisma Client for DB queries (no raw SQL).
   • Write Vietnamese UI text via i18n messages only.
 Never:
   • Hard‑code money constants (take from .env or DB).

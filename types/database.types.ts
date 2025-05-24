@@ -45,6 +45,32 @@ export type Database = {
           status?: string
         }
       }
+      payslip: {
+        Row: {
+          id: string
+          user_id: string
+          cycle_id: string
+          net_salary: number
+          pdf_path: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          cycle_id: string
+          net_salary: number
+          pdf_path: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          cycle_id?: string
+          net_salary?: number
+          pdf_path?: string
+          created_at?: string
+        }
+      }
       timesheet_entries: {
         Row: {
           id: string
@@ -214,9 +240,17 @@ export type Enums<
     ? keyof Database[PublicEnumNameOrOptions['schema']]['Enums']
     : never = never,
 > = PublicEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicEnumNameOrOptions['schema']]['Enums'][EnumName]
+  ? Database[PublicEnumNameOrOptions['schema']]['Enums'][EnumName] extends {
+      [key: string]: infer E
+    }
+    ? E
+    : never
   : PublicEnumNameOrOptions extends keyof PublicSchema['Enums']
-    ? PublicSchema['Enums'][PublicEnumNameOrOptions]
+    ? PublicSchema['Enums'][PublicEnumNameOrOptions] extends {
+        [key: string]: infer E
+      }
+      ? E
+      : never
     : never
 
 export type CompositeTypes<
