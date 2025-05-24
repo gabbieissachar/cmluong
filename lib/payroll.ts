@@ -1,11 +1,17 @@
 import { supabaseAdmin } from '@/utils/supabase/admin'
 import { randomUUID } from 'crypto'
 
-export async function calculatePayroll(cycleId: string) {
-  const { data: entries, error } = await supabaseAdmin
+export async function calculatePayroll(cycleId: string, userIds?: string[]) {
+  let query = supabaseAdmin
     .from('timesheet_entries')
     .select('*')
     .eq('cycle_id', cycleId)
+
+  if (userIds && userIds.length > 0) {
+    query = query.in('user_id', userIds)
+  }
+
+  const { data: entries, error } = await query
 
   if (error) {
     throw new Error(`Failed to fetch timesheet entries: ${error.message}`)
