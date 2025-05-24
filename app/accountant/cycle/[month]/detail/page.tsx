@@ -262,12 +262,14 @@ export default function CycleDetailPage({
                 <DropdownMenuCheckboxItem
                   checked={visibleColumns.size === allColumns.length}
                   onCheckedChange={handleSelectAll}
+                  onSelect={(e) => e.preventDefault()}
                 >
                   Select All
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem
                   checked={visibleColumns.size === 0}
                   onCheckedChange={handleDeselectAll}
+                  onSelect={(e) => e.preventDefault()}
                 >
                   Deselect All
                 </DropdownMenuCheckboxItem>
@@ -278,6 +280,7 @@ export default function CycleDetailPage({
                     className="capitalize"
                     checked={visibleColumns.has(column.key)}
                     onCheckedChange={() => handleColumnToggle(column.key)}
+                    onSelect={(e) => e.preventDefault()}
                   >
                     {column.label}
                   </DropdownMenuCheckboxItem>
