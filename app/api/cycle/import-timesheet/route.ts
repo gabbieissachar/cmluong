@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/utils/supabase/admin'
 import { NextResponse } from 'next/server'
+import { calculatePayroll } from '@/lib/payroll'
 
 // Robust CSV parser for quoted/multiline fields
 function parseCsv(text: string) {
@@ -121,6 +122,11 @@ export async function POST(req: Request) {
       console.error('Error inserting timesheet entries:', timesheetInsertError)
     } else {
       console.log('Timesheet entries inserted successfully')
+      try {
+        await calculatePayroll(cycle.id)
+      } catch (error) {
+        console.error('Error calculating payroll:', error)
+      }
     }
   }
 
