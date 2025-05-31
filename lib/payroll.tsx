@@ -63,13 +63,31 @@ export async function calculatePayroll(cycleId: string, userIds?: string[]) {
     const pdfPath = `${cycleId}/${entry.user_id}.pdf`
 
     const slipRecord = { id, ...basePayload, pdf_path: pdfPath } as PayslipRow
-    const pdfBuffer = await pdf(
-      <PayslipPdf slip={slipRecord} entry={entry as TimesheetRow} />
-    ).toBuffer()
 
-    await supabaseAdmin.storage
+    // Create a simple text-based PDF or HTML content first for testing
+    const pdfContent = `
+    Payslip
+    Name: ${entry.full_name}
+    Department: ${entry.department}
+    Position: ${entry.position}
+    Base Salary: ${baseSalary}
+    Allowance: ${allowance}
+    Deductions: ${deductions}
+    Employee Social Insurance: ${employeeSI}
+    Net Salary: ${netSalary}
+    `
+
+    // For now, let's upload a simple text file to test if the storage works
+    const pdfBuffer = Buffer.from(pdfContent, 'utf-8')
+
+    const { error: uploadError } = await supabaseAdmin.storage
       .from('payslips')
-      .upload(pdfPath, pdfBuffer, { contentType: 'application/pdf', upsert: true })
+      .upload(pdfPath, pdfBuffer, { contentType: 'text/plain', upsert: true })
+
+    if (uploadError) {
+      console.error('Error uploading PDF to storage:', uploadError)
+      continue
+    }
 
     const payload = { ...basePayload, pdf_path: pdfPath }
 

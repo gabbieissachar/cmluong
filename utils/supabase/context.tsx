@@ -24,10 +24,17 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
                         const headers = new Headers(options?.headers);
                         headers.set('Authorization', `Bearer ${clerkToken}`);
 
-                        return fetch(url, {
+                        // Add duplex option for requests with body
+                        const fetchOptions: RequestInit = {
                             ...options,
                             headers,
-                        });
+                        };
+
+                        if (options.body && options.method !== 'GET' && options.method !== 'HEAD') {
+                            (fetchOptions as any).duplex = 'half';
+                        }
+
+                        return fetch(url, fetchOptions);
                     },
                 },
             },

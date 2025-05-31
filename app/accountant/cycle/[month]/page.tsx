@@ -6,6 +6,7 @@ import { useAuth, SignOutButton } from '@clerk/nextjs'
 import { Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { Toaster } from '@/components/ui/sonner'
+import axios from 'axios'
 
 export default function CyclePage({ params }: { params: { month: string } }) {
   const [file, setFile] = useState<File | null>(null)
@@ -28,20 +29,16 @@ export default function CyclePage({ params }: { params: { month: string } }) {
 
     try {
         setImporting(true)
-        const response = await fetch('/api/cycle/import-timesheet', {
-            method: 'POST',
-            body: formData,
+        const response = await axios.post('/api/cycle/import-timesheet', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
         });
-
-        const result = await response.json();
-        if (response.ok) {
-            toast({ title: 'Timesheet imported' })
-            router.refresh()
-        } else {
-            toast({ title: result.error || 'Import failed', variant: 'destructive' })
-        }
-    } catch (error) {
-        toast({ title: 'Import failed', variant: 'destructive' })
+        toast({ title: 'Timesheet imported' })
+        router.refresh()
+    } catch (error: any) {
+        const errorMessage = error.response?.data?.error || 'Import failed'
+        toast({ title: errorMessage, variant: 'destructive' })
     } finally {
         setImporting(false)
     }
@@ -52,19 +49,16 @@ export default function CyclePage({ params }: { params: { month: string } }) {
     data.append('month', params.month)
     try {
       setCloning(true)
-      const res = await fetch('/api/cycle/import-timesheet', {
-        method: 'POST',
-        body: data,
+      const response = await axios.post('/api/cycle/import-timesheet', data, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
       })
-      const result = await res.json()
-      if (res.ok) {
-        toast({ title: 'Last month cloned' })
-        router.refresh()
-      } else {
-        toast({ title: result.error || 'Clone failed', variant: 'destructive' })
-      }
-    } catch (err) {
-      toast({ title: 'Clone failed', variant: 'destructive' })
+      toast({ title: 'Last month cloned' })
+      router.refresh()
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || 'Clone failed'
+      toast({ title: errorMessage, variant: 'destructive' })
     } finally {
       setCloning(false)
     }

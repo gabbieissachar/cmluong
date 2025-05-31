@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import axios from 'axios'
 
 interface Props {
   userIds: string[]
@@ -53,21 +54,17 @@ export default function BulkEditDialog({
       }
     })
     try {
-      const res = await fetch('/api/timesheet-entry/bulk-update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userIds, cycleId, updates }),
+      const response = await axios.post('/api/timesheet-entry/bulk-update', {
+        userIds, 
+        cycleId, 
+        updates
       })
-      const data = await res.json()
-      if (res.ok) {
-        toast({ title: 'Entries updated' })
-        onSuccess()
-        onOpenChange(false)
-      } else {
-        toast({ title: data.error || 'Update failed', variant: 'destructive' })
-      }
-    } catch (err) {
-      toast({ title: 'Update failed', variant: 'destructive' })
+      toast({ title: 'Entries updated' })
+      onSuccess()
+      onOpenChange(false)
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || 'Update failed'
+      toast({ title: errorMessage, variant: 'destructive' })
     } finally {
       setIsSubmitting(false)
     }

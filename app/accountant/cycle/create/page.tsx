@@ -3,6 +3,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import Link from 'next/link'
+import axios from 'axios'
 
 export default function CreateCyclePage() {
   const [month, setMonth] = useState("")
@@ -25,18 +26,15 @@ export default function CreateCyclePage() {
     formData.append("file", file)
     formData.append("month", month)
     try {
-      const response = await fetch("/api/cycle/import-timesheet", {
-        method: "POST",
-        body: formData,
+      const response = await axios.post("/api/cycle/import-timesheet", formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
       })
-      if (!response.ok) {
-        const result = await response.json()
-        setError(result.error || "Import failed.")
-        return
-      }
       router.push(`/accountant/cycle/${month}/detail`)
-    } catch {
-      setError("Error importing timesheet.")
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || "Import failed."
+      setError(errorMessage)
     }
   }
 
@@ -49,18 +47,15 @@ export default function CreateCyclePage() {
     const data = new FormData()
     data.append("month", month)
     try {
-      const res = await fetch("/api/cycle/clone", {
-        method: "POST",
-        body: data,
+      const response = await axios.post("/api/cycle/clone", data, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
       })
-      if (!res.ok) {
-        const result = await res.json()
-        setError(result.error || "Clone failed.")
-        return
-      }
       router.push(`/accountant/cycle/${month}/detail`)
-    } catch {
-      setError("Error cloning cycle.")
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || "Clone failed."
+      setError(errorMessage)
     }
   }
 

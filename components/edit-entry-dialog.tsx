@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/hooks/use-toast'
 import { Loader2 } from 'lucide-react'
+import axios from 'axios'
 
 export interface TimesheetEntry {
   id: string
@@ -44,25 +45,17 @@ export default function EditEntryDialog({ entry, open, onOpenChange, onSuccess }
     if (!entry) return
     setIsSubmitting(true)
     try {
-      const res = await fetch(`/api/timesheet-entry/${entry.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          salary: form.salary ? Number(form.salary) : null,
-          parking_allowance: form.parking_allowance ? Number(form.parking_allowance) : null,
-          actual_working_days: form.actual_working_days ? Number(form.actual_working_days) : null,
-        }),
+      const response = await axios.patch(`/api/timesheet-entry/${entry.id}`, {
+        salary: form.salary ? Number(form.salary) : null,
+        parking_allowance: form.parking_allowance ? Number(form.parking_allowance) : null,
+        actual_working_days: form.actual_working_days ? Number(form.actual_working_days) : null,
       })
-      if (res.ok) {
-        toast({ title: 'Entry updated' })
-        onSuccess()
-        onOpenChange(false)
-      } else {
-        const data = await res.json()
-        toast({ title: data.error || 'Update failed', variant: 'destructive' })
-      }
-    } catch (err) {
-      toast({ title: 'Update failed', variant: 'destructive' })
+      toast({ title: 'Entry updated' })
+      onSuccess()
+      onOpenChange(false)
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || 'Update failed'
+      toast({ title: errorMessage, variant: 'destructive' })
     } finally {
       setIsSubmitting(false)
     }

@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/utils/supabase/admin'
 import { NextResponse } from 'next/server'
+import axios from 'axios'
 
 // Robust CSV parser for quoted/multiline fields
 function parseCsv(text: string) {
@@ -124,16 +125,11 @@ export async function POST(req: Request) {
     } else {
       console.log('Timesheet entries inserted successfully')
       try {
-        const response = await fetch(
+        const response = await axios.post(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cycle/calculate-payslip`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ cycleId: cycle.id }),
-          }
+          { cycleId: cycle.id }
         )
-        const result = await response.json()
-        console.log('Payslip calculation result:', result)
+        console.log('Payslip calculation result:', response.data)
       } catch (error) {
         console.error('Error calling payslip calculation endpoint:', error)
       }

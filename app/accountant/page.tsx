@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 import { Toaster } from '@/components/ui/sonner'
+import axios from 'axios'
 
 type Cycle = {
   id: string
@@ -20,9 +21,9 @@ export default function AccountantOverviewPage() {
   const { toast } = useToast()
 
   useEffect(() => {
-    fetch("/api/cycle/list")
-      .then((res) => res.json())
-      .then((data) => setCycles(data.cycles || []))
+    axios.get("/api/cycle/list")
+      .then((response) => setCycles(response.data.cycles || []))
+      .catch((error) => console.error('Failed to fetch cycles:', error))
   }, [])
 
   return (
@@ -67,21 +68,13 @@ export default function AccountantOverviewPage() {
                     onClick={async () => {
                       setLoadingCycle(cycle.id)
                       try {
-                        const response = await fetch('/api/cycle/calculate-payslip', {
-                          method: 'POST',
-                          headers: {
-                            'Content-Type': 'application/json',
-                          },
-                          body: JSON.stringify({ cycleId: cycle.id }),
+                        const response = await axios.post('/api/cycle/calculate-payslip', {
+                          cycleId: cycle.id
                         })
-                        const result = await response.json()
-                        if (response.ok) {
-                          toast({ title: 'Payslips calculated' })
-                        } else {
-                          toast({ title: result.error || 'Calculation failed', variant: 'destructive' })
-                        }
-                      } catch (err) {
-                        toast({ title: 'Calculation failed', variant: 'destructive' })
+                        toast({ title: 'Payslips calculated' })
+                      } catch (error: any) {
+                        const errorMessage = error.response?.data?.error || 'Calculation failed'
+                        toast({ title: errorMessage, variant: 'destructive' })
                       } finally {
                         setLoadingCycle(null)
                       }

@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/utils/supabase/admin'
-import prisma from '@/lib/prisma'
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   const id = params.id

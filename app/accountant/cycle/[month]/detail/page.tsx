@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, ReactNode, useCallback } from 'react';
-import { useParams } from 'next/navigation';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +24,7 @@ import BulkEditDialog from '@/components/bulk-edit-dialog'
 import { Toaster } from '@/components/ui/sonner'
 import { Loader2 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import axios from 'axios'
 
 type Entry = {
   id: string
@@ -164,19 +164,15 @@ export default function CycleDetailPage({
   const generatePayslip = async (entry: Entry) => {
     setGenerating(entry.id)
     try {
-      const res = await fetch('/api/cycle/calculate-payslip', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cycleId: entry.cycle_id, userIds: [entry.user_id] }),
+      const response = await axios.post('/api/cycle/calculate-payslip', {
+        cycleId: entry.cycle_id,
+        userIds: [entry.user_id]
       })
-      const data = await res.json()
-      if (res.ok) {
-        toast({ title: 'Payslip generated' })
-        fetchEntries()
-      } else {
-        toast({ title: data.error || 'Generation failed', variant: 'destructive' })
-      }
-    } catch (err) {
+      const data = response.data
+      toast({ title: 'Payslip generated' })
+      fetchEntries()
+    } catch (error) {
+      console.error('Generation failed:', error)
       toast({ title: 'Generation failed', variant: 'destructive' })
     } finally {
       setGenerating(null)
@@ -190,20 +186,16 @@ export default function CycleDetailPage({
       (id) => entries.find((e) => e.id === id)?.user_id
     ).filter(Boolean)
     try {
-      const res = await fetch('/api/cycle/calculate-payslip', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cycleId: entries[0].cycle_id, userIds }),
+      const response = await axios.post('/api/cycle/calculate-payslip', {
+        cycleId: entries[0].cycle_id,
+        userIds
       })
-      const data = await res.json()
-      if (res.ok) {
-        toast({ title: 'Payslips generated' })
-        setSelected(new Set())
-        fetchEntries()
-      } else {
-        toast({ title: data.error || 'Generation failed', variant: 'destructive' })
-      }
-    } catch (err) {
+      const data = response.data
+      toast({ title: 'Payslips generated' })
+      setSelected(new Set())
+      fetchEntries()
+    } catch (error) {
+      console.error('Generation failed:', error)
       toast({ title: 'Generation failed', variant: 'destructive' })
     } finally {
       setBulkGenerating(false)
@@ -213,9 +205,8 @@ export default function CycleDetailPage({
   const fetchEntries = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch(`/api/cycle/${month}/entries-with-payslip`)
-      const data = await res.json()
-      setEntries(data.entries)
+      const response = await axios.get(`/api/cycle/${month}/entries-with-payslip`)
+      setEntries(response.data.entries)
     } catch (error) {
       console.error('Failed to fetch entries:', error)
     } finally {
