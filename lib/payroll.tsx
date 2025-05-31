@@ -1,9 +1,27 @@
 import { supabaseAdmin } from '@/utils/supabase/admin'
 import { randomUUID } from 'crypto'
 import { pdf } from '@react-pdf/renderer'
-import { PayslipPdf, PayslipRow, TimesheetRow } from './payslip-pdf'
+import {
+  PayslipPdf,
+  PayslipItem,
+  PayslipRow,
+  TimesheetRow,
+} from './payslip-pdf'
+import { format } from 'date-fns'
 
 export async function calculatePayroll(cycleId: string, userIds?: string[]) {
+  const { data: cycle, error: cycleError } = await supabaseAdmin
+    .from('payroll_cycles')
+    .select('month')
+    .eq('id', cycleId)
+    .single()
+
+  if (cycleError || !cycle) {
+    throw new Error('Failed to fetch payroll cycle information')
+  }
+
+  const monthYear = format(new Date(cycle.month), 'MM/yyyy')
+  const currentDate = format(new Date(), 'dd/MM/yyyy')
   let query = supabaseAdmin
     .from('timesheet_entries')
     .select('*')
@@ -62,27 +80,43 @@ export async function calculatePayroll(cycleId: string, userIds?: string[]) {
     const id = existing?.id ?? randomUUID()
     const pdfPath = `${cycleId}/${entry.user_id}.pdf`
 
-    const slipRecord = { id, ...basePayload, pdf_path: pdfPath } as PayslipRow
+    const positiveItems: PayslipItem[] = []
+    if (baseSalary > 0)
+      positiveItems.push({ description: 'Lương cơ bản', amount: baseSalary })
+    if (allowance > 0)
+      positiveItems.push({ description: 'Phụ cấp', amount: allowance })
 
-    // Create a simple text-based PDF or HTML content first for testing
-    const pdfContent = `
-    Payslip
-    Name: ${entry.full_name}
-    Department: ${entry.department}
-    Position: ${entry.position}
-    Base Salary: ${baseSalary}
-    Allowance: ${allowance}
-    Deductions: ${deductions}
-    Employee Social Insurance: ${employeeSI}
-    Net Salary: ${netSalary}
-    `
+    const negativeItems: PayslipItem[] = []
+    if ((entry.salary_advance_deduction ?? 0) > 0)
+      negativeItems.push({
+        description: 'Tạm ứng lương',
+        amount: entry.salary_advance_deduction!,
+      })
+    if ((entry.tuition_fee_deduction_for_children ?? 0) > 0)
+      negativeItems.push({
+        description: 'Khấu trừ học phí',
+        amount: entry.tuition_fee_deduction_for_children!,
+      })
+    if (employeeSI > 0)
+      negativeItems.push({ description: 'BHXH nhân viên', amount: employeeSI })
 
-    // For now, let's upload a simple text file to test if the storage works
-    const pdfBuffer = Buffer.from(pdfContent, 'utf-8')
+    const pdfBuffer = await pdf(
+      <PayslipPdf
+        entry={entry}
+        monthYear={monthYear}
+        date={currentDate}
+        positiveItems={positiveItems}
+        negativeItems={negativeItems}
+        total={netSalary}
+      />
+    ).toBuffer()
 
     const { error: uploadError } = await supabaseAdmin.storage
       .from('payslips')
-      .upload(pdfPath, pdfBuffer, { contentType: 'text/plain', upsert: true })
+      .upload(pdfPath, pdfBuffer, {
+        contentType: 'application/pdf',
+        upsert: true,
+      })
 
     if (uploadError) {
       console.error('Error uploading PDF to storage:', uploadError)
