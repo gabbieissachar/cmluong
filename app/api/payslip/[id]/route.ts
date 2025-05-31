@@ -41,8 +41,8 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   const buffer = Buffer.from(await file.arrayBuffer())
   return new NextResponse(buffer, {
     headers: {
-      'Content-Type': 'text/plain',
-      'Content-Disposition': `inline; filename="${id}.txt"`,
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `inline; filename="${id}.pdf"`,
     },
   })
 }

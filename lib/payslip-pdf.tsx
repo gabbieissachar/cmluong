@@ -1,56 +1,109 @@
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
+import {
+  Document,
+  Page,
+  Text,
+  View,
+  StyleSheet,
+  Font,
+  Image,
+} from '@react-pdf/renderer'
+import path from 'path'
 import type { Database } from '@/types/database.types'
 
 export type PayslipRow = Database['public']['Tables']['payslip']['Row']
 export type TimesheetRow = Database['public']['Tables']['timesheet_entries']['Row']
 
-const styles = StyleSheet.create({
-  page: { padding: 40, fontSize: 12 },
-  section: { marginBottom: 10 },
-  header: { fontSize: 18, marginBottom: 20 },
-  label: { fontWeight: 'bold' },
+export interface PayslipItem {
+  description: string
+  amount: number
+}
+
+interface PayslipPdfProps {
+  entry: TimesheetRow
+  monthYear: string
+  date: string
+  positiveItems: PayslipItem[]
+  negativeItems: PayslipItem[]
+  total: number
+}
+
+Font.register({
+  family: 'DejaVuSans',
+  src: '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
 })
 
-export function PayslipPdf({ slip, entry }: { slip: PayslipRow; entry: TimesheetRow }) {
+const styles = StyleSheet.create({
+  page: { padding: 40, fontSize: 12, fontFamily: 'DejaVuSans' },
+  logo: { position: 'absolute', left: 40, top: 40, width: 100, height: 70 },
+  header: { position: 'absolute', left: 350, top: 20, fontSize: 16 },
+  date: { position: 'absolute', left: 350, top: 40, fontSize: 12 },
+  section: { marginBottom: 10, marginTop: 10 },
+  sectionHeader: { fontSize: 13, marginBottom: 10 },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 30,
+  },
+  amount: { width: 100, textAlign: 'right' },
+})
+
+export function PayslipPdf({
+  entry,
+  monthYear,
+  date,
+  positiveItems,
+  negativeItems,
+  total,
+}: PayslipPdfProps) {
+  const logoPath = path.join(process.cwd(), 'public', 'codeguide-logo.png')
+
+  const formatCurrency = (n: number) =>
+    `${n.toLocaleString('vi-VN')} ₫`
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <Text style={styles.header}>Payslip</Text>
+        <Image src={logoPath} style={styles.logo} />
+        <Text style={styles.header}>Pay Slip Tháng {monthYear}</Text>
+        <Text style={styles.date}>{date}</Text>
+
         <View style={styles.section}>
-          <Text style={styles.label}>Name: </Text>
+          <Text style={styles.sectionHeader}>Nhân sự</Text>
           <Text>{entry.full_name}</Text>
         </View>
+
         <View style={styles.section}>
-          <Text style={styles.label}>Department: </Text>
-          <Text>{entry.department}</Text>
+          <Text style={styles.sectionHeader}>Các Khoản Thu Nhập</Text>
+          {positiveItems.map((item, idx) => (
+            <View key={idx} style={styles.row}>
+              <Text>
+                {idx + 1}. {item.description}
+              </Text>
+              <Text style={styles.amount}>{formatCurrency(item.amount)}</Text>
+            </View>
+          ))}
         </View>
+
+        {negativeItems.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Các Khoản Giảm Trừ</Text>
+            {negativeItems.map((item, idx) => (
+              <View key={idx} style={styles.row}>
+                <Text>
+                  {idx + 1}. {item.description}
+                </Text>
+                <Text style={styles.amount}>-{formatCurrency(item.amount)}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
         <View style={styles.section}>
-          <Text style={styles.label}>Position: </Text>
-          <Text>{entry.position}</Text>
-        </View>
-        <View style={styles.section}>
-          <Text style={styles.label}>Base Salary: </Text>
-          <Text>{slip.base_salary}</Text>
-        </View>
-        <View style={styles.section}>
-          <Text style={styles.label}>Allowance: </Text>
-          <Text>{slip.allowance}</Text>
-        </View>
-        <View style={styles.section}>
-          <Text style={styles.label}>Deductions: </Text>
-          <Text>{slip.deductions}</Text>
-        </View>
-        <View style={styles.section}>
-          <Text style={styles.label}>Employee Social Insurance: </Text>
-          <Text>{slip.employee_si}</Text>
-        </View>
-        <View style={styles.section}>
-          <Text style={styles.label}>Employer Social Insurance: </Text>
-          <Text>{slip.employer_si}</Text>
-        </View>
-        <View style={styles.section}>
-          <Text style={styles.label}>Net Salary: </Text>
-          <Text>{slip.net_salary}</Text>
+          <Text style={styles.sectionHeader}>Lương Thực Nhận</Text>
+          <View style={styles.row}>
+            <Text></Text>
+            <Text style={styles.amount}>{formatCurrency(total)}</Text>
+          </View>
         </View>
       </Page>
     </Document>
